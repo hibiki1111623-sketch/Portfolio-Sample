@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>架空LP（レスポンシブ対応・JS挙動あり）</title>
+  <meta name="description" content="HTML/CSS/JavaScriptで作成した架空LPです。スマホ対応（レスポンシブ）と、ハンバーガーメニュー開閉・スムーススクロールを実装しています。既存サイトの軽微修正を想定したサンプルです。" />
+  <style>
+    :root {
+      --bg: #f8f5ef;
+      --bg2: #fffdf9;
+      --text: #2b2118;
+      --sub: #6d5f52;
+      --line: #eadfce;
+      --main: #b45309;
+      --main-dark: #92400e;
+      --accent: #fff1df;
+      --green: #365314;
+      --white: #ffffff;
+      --shadow: 0 14px 36px rgba(43, 33, 24, 0.1);
+      --radius: 20px;
+      --max: 1120px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #fffaf4 0%, #f8f5ef 100%);
+      line-height: 1.7;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    .container {
+      width: min(92%, var(--max));
+      margin: 0 auto;
+    }
+
+    .section {
+      padding: 90px 0;
+    }
+
+    .section-title {
+      font-size: clamp(1.9rem, 3vw, 2.8rem);
+      line-height: 1.25;
+      margin-bottom: 14px;
+    }
+
+    .section-lead {
+      color: var(--sub);
+      max-width: 740px;
+      margin-bottom: 42px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 180px;
+      padding: 14px 24px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-weight: 700;
+      transition: 0.25s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--main);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-primary:hover {
+      background: var(--main-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      border-color: #e6d7c2;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 250, 244, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(234, 223, 206, 0.9);
+    }
+
+    .header-inner {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 0.03em;
+    }
+
+    .logo span {
+      color: var(--main);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-list {
+      display: flex;
+      gap: 22px;
+      color: var(--sub);
+      font-weight: 700;
+    }
+
+    .nav-list a:hover {
+      color: var(--main);
+    }
+
+    .hamburger {
+      display: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .hamburger span {
+      position: absolute;
+      left: 11px;
+      width: 24px;
+      height: 2px;
+      background: var(--text);
+      transition: 0.3s;
+    }
+
+    .hamburger span:nth-child(1) { top: 16px; }
+    .hamburger span:nth-child(2) { top: 23px; }
+    .hamburger span:nth-child(3) { top: 30px; }
+
+    .hamburger.is-open span:nth-child(1) {
+      top: 23px;
+      transform: rotate(45deg);
+    }
+
+    .hamburger.is-open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.is-open span:nth-child(3) {
+      top: 23px;
+      transform: rotate(-45deg);
+    }
+
+    .hero {
+      padding: 78px 0 48px;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .hero-copy {
+      background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,241,223,0.92));
+      border: 1px solid #f2dfc8;
+      border-radius: 30px;
+      padding: 48px;
+      box-shadow: var(--shadow);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--main);
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.2rem, 4.6vw, 4.2rem);
+      line-height: 1.15;
+      margin-bottom: 18px;
+    }
+
+    .hero-text {
+      color: var(--sub);
+      font-size: 1.05rem;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .hero-points {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .hero-points li {
+      background: #fff;
+      border: 1px solid #f0dfc9;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .hero-points strong {
+      display: block;
+      color: var(--main);
+      font-size: 1.15rem;
+    }
+
+    .hero-visual {
+      display: grid;
+      gap: 18px;
+    }
+
+    .card,
+    .feature-card,
+    .menu-card,
+    .voice-card,
+    .access-card,
+    .form-card,
+    .info-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      padding: 28px;
+    }
+
+    .hero-burger {
+      min-height: 370px;
+      border-radius: 26px;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at 70% 25%, rgba(255, 214, 102, 0.65), transparent 24%),
+        linear-gradient(180deg, #4a2d18 0%, #6b3f1f 42%, #fff3df 42%, #fff3df 100%);
+      border: 1px solid #d8bea2;
+      box-shadow: var(--shadow);
+      padding: 26px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .burger-stack {
+      width: min(340px, 92%);
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .bun-top,
+    .bun-bottom,
+    .lettuce,
+    .patty,
+    .cheese,
+    .tomato {
+      width: 100%;
+      border-radius: 999px;
+    }
+
+    .bun-top {
+      height: 92px;
+      background: linear-gradient(180deg, #f8c26a 0%, #df8a2b 100%);
+      border-bottom-left-radius: 36px;
+      border-bottom-right-radius: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bun-top::before {
+      content: "";
+      position: absolute;
+      inset: 18px 28px auto 28px;
+      height: 18px;
+      background-image:
+        radial-gradient(circle, #fff6d7 0 36%, transparent 38%),
+        radial-gradient(circle, #fff6d7 0 36%, transparent 38%),
+        radial-gradient(circle, #fff6d7 0 36%, transparent 38%),
+        radial-gradient(circle, #fff6d7 0 36%, transparent 38%),
+        radial-gradient(circle, #fff6d7 0 36%, transparent 38%),
+        radial-gradient(circle, #fff6d7 0 36%, transparent 38%);
+      background-size: 22px 18px;
+      background-repeat: space;
+    }
+
+    .lettuce {
+      height: 18px;
+      background: linear-gradient(90deg, #4d7c0f, #65a30d);
+      clip-path: polygon(0 40%, 7% 0, 15% 55%, 23% 8%, 31% 58%, 39% 8%, 47% 62%, 55% 10%, 63% 60%, 71% 8%, 79% 58%, 87% 6%, 94% 58%, 100% 30%, 100% 100%, 0 100%);
+    }
+
+    .tomato {
+      height: 16px;
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+    }
+
+    .cheese {
+      height: 18px;
+      background: linear-gradient(90deg, #facc15, #f59e0b);
+      width: 94%;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 8% 100%);
+    }
+
+    .patty {
+      height: 42px;
+      background: linear-gradient(180deg, #4b2e1f, #2f1b12);
+    }
+
+    .bun-bottom {
+      height: 34px;
+      background: linear-gradient(180deg, #d99139, #c77722);
+    }
+
+    .floating-note {
+      position: absolute;
+      top: 22px;
+      right: 22px;
+      background: rgba(255,255,255,0.92);
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.8);
+      font-weight: 800;
+      color: var(--main-dark);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .info-grid,
+    .feature-grid,
+    .menu-grid,
+    .voice-grid {
+      display: grid;
+      gap: 22px;
+    }
+
+    .info-grid,
+    .feature-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .menu-grid,
+    .voice-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .info-card,
+    .feature-card,
+    .menu-card,
+    .voice-card,
+    .access-card,
+    .form-card {
+      padding: 28px;
+    }
+
+    .info-card h3,
+    .feature-card h3,
+    .menu-card h3,
+    .voice-card h3,
+    .access-card h3,
+    .form-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .info-card p,
+    .feature-card p,
+    .menu-card p,
+    .voice-card p,
+    .access-card p,
+    .form-card p,
+    .card p {
+      color: var(--sub);
+    }
+
+    .icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: var(--accent);
+      color: var(--main);
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .menu-label {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #f3efe8;
+      color: #6b4e2e;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .price {
+      display: block;
+      margin-top: 12px;
+      color: var(--main);
+      font-weight: 800;
+      font-size: 1.15rem;
+    }
+
+    .access-wrap {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 24px;
+    }
+
+    .map-box {
+      min-height: 100%;
+      background:
+        linear-gradient(0deg, rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
+        repeating-linear-gradient(90deg, #eadfce 0 36px, #fff 36px 72px),
+        repeating-linear-gradient(0deg, #eadfce 0 36px, #fff 36px 72px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: relative;
+      min-height: 320px;
+      overflow: hidden;
+    }
+
+    .map-pin {
+      position: absolute;
+      top: 46%;
+      left: 54%;
+      width: 28px;
+      height: 28px;
+      background: var(--main);
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+    }
+
+    .map-pin::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    .road {
+      position: absolute;
+      background: #d6b48c;
+      opacity: 0.7;
+    }
+
+    .road.r1 {
+      width: 14px;
+      height: 100%;
+      left: 28%;
+      top: 0;
+    }
+
+    .road.r2 {
+      height: 14px;
+      width: 100%;
+      top: 38%;
+      left: 0;
+    }
+
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 24px;
+    }
+
+    .contact-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .contact-list li {
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #fbf7f0;
+      border: 1px solid var(--line);
+    }
+
+    .form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: 700;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid #d8cab7;
+      background: #fff;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .small-note {
+      color: var(--sub);
+      font-size: 0.92rem;
+    }
+
+    .footer {
+      padding: 30px 0 44px;
+      color: var(--sub);
+      text-align: center;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: 0.6s ease;
+    }
+
+    .fade-up.is-show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 960px) {
+      .hero-inner,
+      .access-wrap,
+      .contact-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .info-grid,
+      .feature-grid,
+      .menu-grid,
+      .voice-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero-copy {
+        padding: 38px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav {
+        position: fixed;
+        inset: 76px 0 auto 0;
+        background: rgba(255, 250, 244, 0.98);
+        border-bottom: 1px solid var(--line);
+        padding: 20px;
+        transform: translateY(-120%);
+        transition: 0.3s;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .nav.is-open {
+        transform: translateY(0);
+      }
+
+      .nav-list {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .nav-list a {
+        display: block;
+        padding: 14px 4px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav .btn {
+        width: 100%;
+      }
+
+      .hamburger {
+        display: block;
+      }
+
+      .hero-points,
+      .info-grid,
+      .feature-grid,
+      .menu-grid,
+      .voice-grid,
+      .contact-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 72px 0;
+      }
+
+      .hero {
+        padding-top: 48px;
+      }
+
+      .hero-copy,
+      .card,
+      .feature-card,
+      .menu-card,
+      .voice-card,
+      .access-card,
+      .form-card,
+      .info-card {
+        padding: 22px;
+      }
+
+      .hero-burger {
+        min-height: 290px;
+        padding: 18px;
+      }
+
+      .floating-note {
+        top: 16px;
+        right: 16px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#top" class="logo">BROWN<span> BURGER</span></a>
+
+      <nav class="nav" id="nav">
+        <ul class="nav-list">
+          <li><a href="#about">こだわり</a></li>
+          <li><a href="#menu">メニュー</a></li>
+          <li><a href="#feature">選ばれる理由</a></li>
+          <li><a href="#access">アクセス</a></li>
+          <li><a href="#contact">ご予約</a></li>
+        </ul>
+        <a href="#contact" class="btn btn-primary">予約する</a>
+      </nav>
+
+      <button class="hamburger" id="hamburger" aria-label="メニューを開閉する" aria-controls="nav" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy fade-up">
+          <p class="badge">架空ハンバーガー店LP / ポートフォリオ用サンプル</p>
+          <h1 class="hero-title">肉の旨みを、<br>ちゃんと味わう。<br>街のご褒美バーガー。</h1>
+          <p class="hero-text">
+            鹿児島産黒毛和牛のパティを使った、手づくりハンバーガー専門店の架空LPです。
+            スマホ対応、ハンバーガーメニュー開閉、スムーススクロールを実装し、
+            店舗サイトの軽微修正やLP制作を想定したポートフォリオ用に仕上げています。
+          </p>
+          <div class="hero-actions">
+            <a href="#menu" class="btn btn-primary">人気メニューを見る</a>
+            <a href="#contact" class="btn btn-secondary">席を予約する</a>
+          </div>
+          <ul class="hero-points">
+            <li><strong>100%</strong><span>店内仕込みパティ</span></li>
+            <li><strong>SP対応</strong><span>レスポンシブ実装</span></li>
+            <li><strong>JSあり</strong><span>開閉・スクロール対応</span></li>
+          </ul>
+        </div>
+
+        <div class="hero-visual fade-up">
+          <div class="hero-burger">
+            <div class="floating-note">期間限定<br>スモークBBQ</div>
+            <div class="burger-stack">
+              <div class="bun-top"></div>
+              <div class="lettuce"></div>
+              <div class="tomato"></div>
+              <div class="cheese"></div>
+              <div class="patty"></div>
+              <div class="bun-bottom"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>今日のおすすめ</h2>
+            <p>
+              ジューシーなパティに香ばしいバンズ、シャキッとした野菜を重ねた王道バーガー。
+              ランチにも、夜のご褒美にも合う一品をイメージしています。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section">
+      <div class="container">
+        <h2 class="section-title fade-up">BROWN BURGERのこだわり</h2>
+        <p class="section-lead fade-up">
+          架空店舗ながら、実在しそうなハンバーガー屋のLPとして、世界観・導線・情報整理を意識して制作しています。
+          飲食店サイトでよくある「メニュー訴求」「アクセス」「予約導線」をまとめています。
+        </p>
+
+        <div class="info-grid">
+          <article class="info-card fade-up">
+            <div class="icon">01</div>
+            <h3>店内仕込み</h3>
+            <p>毎日店内で成形した粗挽きパティを使用。肉感をしっかり楽しめる想定です。</p>
+          </article>
+          <article class="info-card fade-up">
+            <div class="icon">02</div>
+            <h3>焼きたてバンズ</h3>
+            <p>ふんわり感と香ばしさのバランスを意識したバンズ設定で、見た目にも温かみを出しています。</p>
+          </article>
+          <article class="info-card fade-up">
+            <div class="icon">03</div>
+            <h3>居心地の良さ</h3>
+            <p>カフェのように入りやすく、デートや一人ランチでも使いやすい店舗イメージで構成しています。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="menu" class="section">
+      <div class="container">
+        <h2 class="section-title fade-up">人気メニュー</h2>
+        <p class="section-lead fade-up">
+          価格や説明を並べることで、飲食店LPらしい情報整理を見せられるセクションです。
+          ポートフォリオでは、こういう「一覧の見やすさ」も見せ場になります。
+        </p>
+
+        <div class="menu-grid">
+          <article class="menu-card fade-up">
+            <span class="menu-label">No.1 人気</span>
+            <h3>クラシックチーズバーガー</h3>
+            <p>粗挽きパティにコクのあるチェダーチーズを重ねた、王道の定番メニュー。</p>
+            <span class="price">¥1,280</span>
+          </article>
+          <article class="menu-card fade-up">
+            <span class="menu-label">期間限定</span>
+            <h3>スモークBBQバーガー</h3>
+            <p>甘辛いBBQソースとスモークベーコンを合わせた、食べごたえ重視の一品。</p>
+            <span class="price">¥1,480</span>
+          </article>
+          <article class="menu-card fade-up">
+            <span class="menu-label">女性人気</span>
+            <h3>アボカドサルサバーガー</h3>
+            <p>アボカドのまろやかさとサルサの爽やかさを合わせた、軽やかな味わい。</p>
+            <span class="price">¥1,380</span>
+          </article>
+          <article class="menu-card fade-up">
+            <span class="menu-label">セット推し</span>
+            <h3>フライドポテト & 自家製レモネード</h3>
+            <p>バーガーとの相性を考えた定番サイド。見た目も華やかになるよう想定しています。</p>
+            <span class="price">セット +¥480</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="feature" class="section">
+      <div class="container">
+        <h2 class="section-title fade-up">このLPで見せているポイント</h2>
+        <p class="section-lead fade-up">
+          ただおしゃれにするだけではなく、実務で求められやすい「スマホで見やすい」「ボタンが押しやすい」「情報が整理されている」を意識しています。
+        </p>
+
+        <div class="feature-grid">
+          <article class="feature-card fade-up">
+            <div class="icon">A</div>
+            <h3>レスポンシブ対応</h3>
+            <p>PC・タブレット・スマホでレイアウトが自然に切り替わるよう調整しています。</p>
+          </article>
+          <article class="feature-card fade-up">
+            <div class="icon">B</div>
+            <h3>ハンバーガーメニュー</h3>
+            <p>スマホ時はメニューを開閉式にし、飲食店サイトらしいシンプルな導線にしています。</p>
+          </article>
+          <article class="feature-card fade-up">
+            <div class="icon">C</div>
+            <h3>スムーススクロール</h3>
+            <p>ページ内リンクを押した時に滑らかに移動するようにし、使いやすさを上げています。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title fade-up">お客様の声（架空）</h2>
+        <p class="section-lead fade-up">
+          飲食LPでよくある信頼感セクションも追加しています。軽微修正案件なら、この部分の文言変更やカード崩れ直しもよくあります。
+        </p>
+
+        <div class="voice-grid">
+          <article class="voice-card fade-up">
+            <h3>ボリュームがあって満足</h3>
+            <p>「見た目がおしゃれなだけじゃなく、しっかり肉感があってまた来たくなる味でした。」</p>
+          </article>
+          <article class="voice-card fade-up">
+            <h3>一人でも入りやすい</h3>
+            <p>「店内の雰囲気が落ち着いていて、ランチでもカフェ利用でも使いやすそうです。」</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="access" class="section">
+      <div class="container access-wrap">
+        <div class="access-card fade-up">
+          <h2 class="section-title">アクセス</h2>
+          <p>
+            実案件だと、住所・営業時間・定休日・最寄り駅をまとめることが多いです。
+            このセクションは情報整理のサンプルとして使えます。
+          </p>
+          <ul class="contact-list">
+            <li><strong>住所：</strong> 鹿児島県鹿児島市中央町1-2-3</li>
+            <li><strong>営業時間：</strong> 11:00 - 21:00</li>
+            <li><strong>定休日：</strong> 火曜日</li>
+            <li><strong>最寄り：</strong> 鹿児島中央駅 徒歩5分</li>
+          </ul>
+        </div>
+
+        <div class="map-box fade-up" aria-label="地図イメージ">
+          <div class="road r1"></div>
+          <div class="road r2"></div>
+          <div class="map-pin"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section">
+      <div class="container contact-wrap">
+        <div class="access-card fade-up">
+          <h2 class="section-title">ご予約・お問い合わせ</h2>
+          <p>
+            このフォームはデモです。実案件では、予約フォームやGoogleフォーム、WordPressのCF7などに差し替える想定です。
+          </p>
+          <ul class="contact-list">
+            <li><strong>想定対応：</strong> 文言修正 / メニュー更新 / 崩れ直し / フォーム調整</li>
+            <li><strong>技術：</strong> HTML / CSS / JavaScript</li>
+            <li><strong>用途：</strong> ポートフォリオ掲載用の架空LP</li>
+          </ul>
+        </div>
+
+        <div class="form-card fade-up">
+          <h3>予約フォーム（デモ）</h3>
+          <form class="form">
+            <div class="form-group">
+              <label for="name">お名前</label>
+              <input id="name" type="text" placeholder="例：山田 太郎" />
+            </div>
+            <div class="form-group">
+              <label for="count">人数</label>
+              <select id="count">
+                <option>1名</option>
+                <option>2名</option>
+                <option>3名</option>
+                <option>4名以上</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="date">ご希望日</label>
+              <input id="date" type="text" placeholder="例：2026/01/20 18:30" />
+            </div>
+            <div class="form-group">
+              <label for="message">ご要望</label>
+              <textarea id="message" placeholder="アレルギーや席のご希望などをご記入ください。"></textarea>
+            </div>
+            <button type="button" class="btn btn-primary">送信する（デモ）</button>
+            <p class="small-note">※ 送信機能なしのデモです。ポートフォリオではフォームデザイン調整サンプルとして使えます。</p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 BROWN BURGER Sample Landing Page</p>
+    </div>
+  </footer>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const nav = document.getElementById('nav');
+    const navLinks = document.querySelectorAll('.nav a');
+
+    hamburger.addEventListener('click', () => {
+      const isOpen = hamburger.classList.toggle('is-open');
+      nav.classList.toggle('is-open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('is-open');
+        nav.classList.remove('is-open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    const fadeItems = document.querySelectorAll('.fade-up');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-show');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    fadeItems.forEach(item => observer.observe(item));
+  </script>
+</body>
+</html>
